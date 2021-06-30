@@ -3,6 +3,12 @@ import numpy as np
 from src.unconstrained_min import newton_dir, _step_length_wolfe_condition
 
 
+"""
+interior_pt minimizes the function func subject to the:
+* ineq_constraints - list of inequality constraints, 
+* matrix eq_constraints_mat, eq_constraints_rhs- affine equality constraints
+* The outer iterations start at x0
+"""
 def interior_pt(func, ineq_constraints, eq_constraints_mat, eq_constraints_rhs, x0, eps=1e-3):
     t = 1
     m = 10
@@ -11,6 +17,7 @@ def interior_pt(func, ineq_constraints, eq_constraints_mat, eq_constraints_rhs, 
 
     while True:
         # log_barrier
+        # definition of function - f0, gradient - f1 and hessian - f2
         f0 = lambda a: t * func(a)[0] + phi(a, ineq_constraints)
         f1 = lambda a: t * func(a)[1] + np.add.reduce([(1 / -f(a)[0]) * f(a)[1] for f in ineq_constraints])
         f2 = lambda a: t * func(a)[2] + np.add.reduce(
@@ -18,9 +25,10 @@ def interior_pt(func, ineq_constraints, eq_constraints_mat, eq_constraints_rhs, 
              ineq_constraints])
         objective = lambda a, hessian=False: (f0(a), f1(a)) if not hessian else (
             f0(a), f1(a), f2(a))
-        if eq_constraints_mat is None:
-            x, x_history = newton_dir(objective, x, 1e-12, 1e-8, 100, 1.0, 1e-4, 0.2)
 
+        if eq_constraints_mat is None:
+            # when there are no equality constraints, use newton method for unconstrained problems
+            x, x_history = newton_dir(objective, x, 1e-12, 1e-8, 100, 1.0, 1e-4, 0.2)
         else:
             x, x_history = newton_constrained(objective, eq_constraints_mat, eq_constraints_rhs, x, eps)
 
