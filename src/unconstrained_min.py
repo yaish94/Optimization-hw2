@@ -1,6 +1,9 @@
 import numpy as np
 
 
+"""
+general method that minimizes unconstrained functions
+"""
 def line_search(f, x0, step_size, obj_tol, param_tol, max_iter, dir_selection_method,
                 init_step_len=1.0, slope_ratio=1e-4, back_track_factor=0.2):
     if dir_selection_method == "gd":
@@ -12,6 +15,9 @@ def line_search(f, x0, step_size, obj_tol, param_tol, max_iter, dir_selection_me
     return None
 
 
+"""
+gradient descent algorithm
+"""
 def gradient_descent(f, x0, step_size, obj_tol, param_tol, max_iter):
     x_prev = x0
     f_prev, df_prev = f(x0, False)
@@ -44,6 +50,9 @@ def gradient_descent(f, x0, step_size, obj_tol, param_tol, max_iter):
     return x_next, x_history
 
 
+"""
+bfgs direction algorithm
+"""
 def bfgs_dir(f, x0, obj_tol, param_tol, max_iter, init_step_len, slope_ratio, back_track_factor):
     x_prev = x0
     f_prev, df_prev = f(x0)
@@ -92,6 +101,9 @@ def bfgs_dir(f, x0, obj_tol, param_tol, max_iter, init_step_len, slope_ratio, ba
     return x_next, x_history
 
 
+"""
+newton direction algorithm
+"""
 def newton_dir(f, x0, obj_tol, param_tol, max_iter, init_step_len, slope_ratio, back_track_factor):
     x_prev = x0
     f_prev, df_prev, B_k = f(x0, True)
@@ -127,6 +139,15 @@ def newton_dir(f, x0, obj_tol, param_tol, max_iter, init_step_len, slope_ratio, 
     return x_next, x_history
 
 
+def _step_length_wolfe_condition(init_step_len, slope_ratio, back_track_factor, f, x, p):
+    f0, f1 = lambda a: f(a)[0], lambda a: f(a)[1]
+    step = init_step_len
+    while f0(x + step * p) > f0(x) + slope_ratio * step * (np.dot(f1(x).T, p)):
+        step = step * back_track_factor
+        if step < .0000001: return step # stop for very small values
+    return step
+
+
 def _print_summary(diff_f, diff_x, f_prev, i, x_prev, success):
     print("Last iteration index:", i - 1)
     print("Last x Location: ", x_prev)
@@ -134,12 +155,3 @@ def _print_summary(diff_f, diff_x, f_prev, i, x_prev, success):
     print("Last function value: ", f_prev)
     print("Last function change: ", diff_f)
     print("status: ", "success" if success else "failure")
-
-
-def _step_length_wolfe_condition(init_step_len, slope_ratio, back_track_factor, f, x, p):
-    f0, f1 = lambda a: f(a)[0], lambda a: f(a)[1]
-    step = init_step_len
-    while f0(x + step * p) > f0(x) + slope_ratio * step * (np.dot(f1(x).T, p)):
-        step = step * back_track_factor
-        if step < .0000001: return step  ### check id needed
-    return step
